@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MTG Pack Simulator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin: 20px;
+    }
+    #pack {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 20px;
+    }
+    .card {
+      width: 150px;
+      margin: 10px;
+    }
+    img {
+      width: 100%;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body>
+  <h1>MTG Pack Simulator</h1>
+  <label for="set-select">Choose a Set:</label>
+  <select id="set-select">
+    <option value="khm">Kaldheim (khm)</option>
+    <option value="znr">Zendikar Rising (znr)</option>
+    <option value="iko">Ikoria: Lair of Behemoths (iko)</option>
+    <option value="cmm">Commander Masters</option>
+  </select>
+  <button id="open-pack">Open Pack</button>
+
+  <div id="pack"></div>
+<div id="debug-info"></div>
+  <script>
+    async function openPack() {
+      const setCode = document.getElementById("set-select").value;
+      const response = await fetch("/open_pack", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ set_code: setCode }),
+      });
+
+      if (!response.ok) {
+        alert("Failed to fetch pack data.");
+        return;
+      }
+
+      const data = await response.json();
+      const { pack, debug } = data;
+
+    // Display debugging information in the console
+    console.log("Debugging Information:", debug);
+
+    // Optionally display debugging info on the page
+    const debugDiv = document.getElementById("debug-info");
+    debugDiv.innerHTML = `
+      <h3>Debugging Information</h3>
+      <pre>${JSON.stringify(debug, null, 2)}</pre>
+    `;
+      displayPack(pack);
+    }
+
+    function displayPack(pack) {
+      const packDiv = document.getElementById("pack");
+      packDiv.innerHTML = ""; // Clear previous pack
+
+      [...pack.commons, ...pack.uncommons, pack.rare].forEach(card => {
+        const cardDiv = document.createElement("div");
+        cardDiv.className = "card";
+        cardDiv.innerHTML = `<img src="${card.image_uris.normal}" alt="${card.name}" title="${card.name}">`;
+        packDiv.appendChild(cardDiv);
+      });
+    }
+
+    document.getElementById("open-pack").addEventListener("click", openPack);
+  </script>
+</body>
+</html>
